@@ -8,11 +8,11 @@ import {useDebounceValue} from 'usehooks-ts'
 import { useToast } from '@/components/ui/use-toast'
 import { useRouter } from 'next/navigation'
 import { signUpSchema } from '@/schemas/signUpSchema'
-
+import axios, {AxiosError} from 'axios'
 
 const page = () => {
   const [username, setUsername] = useState('')
-  const [usernameMethod, setUsernameMethod] = useState('')
+  const [usernameMessage, setUsernameMessage] = useState('')
   const [isCheckingUsername, setIsCheckingUsername] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -31,6 +31,15 @@ const page = () => {
 
   useEffect(() => {
     const checksuername = async() => {
+      if(debouncedUsername){
+        setIsCheckingUsername(true)
+        setUsernameMessage('')
+        try{
+          await axios.get(`/api/check-username-unique`) 
+        } catch {
+
+        }
+      }
       
     } 
   }, [debouncedUsername])
