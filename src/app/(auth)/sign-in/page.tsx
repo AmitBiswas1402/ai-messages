@@ -3,7 +3,7 @@ import React from 'react'
 import { useForm } from'react-hook-form'
 import * as z  from 'zod'
 import Link from 'next/link'
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 import {useDebounceValue} from 'usehooks-ts'
 import { useToast } from '@/components/ui/use-toast'
 import { useRouter } from 'next/navigation'
@@ -20,7 +20,7 @@ const page = () => {
   const {toast} = useToast()
   const router = useRouter
 
-  const form = useForm<z.infer<typeof signUpSchema>>({
+  const form = useForm({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
       username: '',
@@ -28,6 +28,13 @@ const page = () => {
       password: ''
     }
   }) 
+
+  useEffect(() => {
+    const checksuername = async() => {
+      
+    } 
+  }, [debouncedUsername])
+  
 
   return (
     <div>page</div>
