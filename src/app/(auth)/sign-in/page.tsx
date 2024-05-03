@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast'
 import { useRouter } from 'next/navigation'
 import { signUpSchema } from '@/schemas/signUpSchema'
 import axios, {AxiosError} from 'axios'
+import { ApiResponse } from '@/types/ApiResponse'
 
 const page = () => {
   const [username, setUsername] = useState('')
@@ -35,12 +36,17 @@ const page = () => {
         setIsCheckingUsername(true)
         setUsernameMessage('')
         try{
-          await axios.get(`/api/check-username-unique`) 
-        } catch {
-
+          const response = await axios.get(`/api/check-username-unique?username=${debouncedUsername}`) 
+          setUsernameMessage(response.data.message)
+        } catch (error) {
+          const axiosError = error as AxiosError<ApiResponse>
+          setUsernameMessage(
+            axiosError.response?.data.message ?? "Error checking username"
+          )
+        } finally {
+          setIsCheckingUsername(false)
         }
-      }
-      
+      }      
     } 
   }, [debouncedUsername])
   
@@ -52,6 +58,6 @@ const page = () => {
 
 export default page
 
-function zodResolver(signUpSchema: z.ZodObject<{ username: z.ZodString; email: z.ZodString; password: z.ZodString }, "strip", z.ZodTypeAny, { username: string; email: string; password: string }, { username: string; email: string; password: string }>): import("react-hook-form").Resolver<import("react-hook-form").FieldValues, any> | undefined {
+function zodResolver(signUpSchema: z.ZodObject<{ username: z.ZodString; email: z.ZodString; password: z.ZodString }, "strip", z.ZodTypeAny, { username: string; email: string; password: string }, { username: string; email: string; password: string }>): import("react-hook-form").Resolver<{ username: string; email: string; password: string }, any> | undefined {
   throw new Error('Function not implemented.')
 }
