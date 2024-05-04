@@ -49,7 +49,18 @@ const page = () => {
       }      
     } 
   }, [debouncedUsername])
-  
+
+  const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
+    setIsSubmitting(true)
+    try {
+      await axios.post<ApiResponse>('/api/sign-up', data)
+      toast({
+        title: 'Success'
+      })
+    } catch (error) {
+      
+    }
+  }  
 
   return (
     <div>page</div>
