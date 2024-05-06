@@ -69,6 +69,7 @@ const page = () => {
         description: errorMessage,
         variant: "destructive"
       })
+      setIsSubmitting(false)
     }
   }  
 
