@@ -22,78 +22,38 @@ import axios, { AxiosError } from 'axios';
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { signUpSchema } from '@/schemas/signUpSchema';
+import { signInSchema } from '@/schemas/signInSchema';
+import { signIn } from 'next-auth/react';
 
 export default function SignUpForm() {
-  const [username, setUsername] = useState('');
-  const [usernameMessage, setUsernameMessage] = useState('');
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const debounced = useDebounceCallback(setUsername, 300);
-
+  
   const router = useRouter();
   const { toast } = useToast();
 
-  const form = useForm<z.infer<typeof signUpSchema>>({
-    resolver: zodResolver(signUpSchema),
+  const form = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
     defaultValues: {
-      username: '',
       email: '',
       password: '',
     },
   });
 
-  useEffect(() => {
-    const checkUsernameUnique = async () => {
-      if (username) {
-        setIsCheckingUsername(true);
-        setUsernameMessage(''); // Reset message
-        try {
-          const response = await axios.get<ApiResponse>(
-            `/api/check-username-unique?username=${username}`
-          );
-          setUsernameMessage(response.data.message);
-        } catch (error) {
-          const axiosError = error as AxiosError<ApiResponse>;
-          setUsernameMessage(
-            axiosError.response?.data.message ?? 'Error checking username'
-          );
-        } finally {
-          setIsCheckingUsername(false);
-        }
-      }
-    };
-    checkUsernameUnique();
-  }, [username]);
-
-  const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
-    setIsSubmitting(true);
-    try {
-      const response = await axios.post<ApiResponse>('/api/sign-up', data);
-
+  const onSubmit = async (data: z.infer<typeof signInSchema>) => {
+    const result = await signIn('credentials', {
+      redirect: false,
+      identifier: data.identifier,
+      password: data.password
+    })
+    if (result?.error) {
       toast({
-        title: 'Success',
-        description: response.data.message,
-      });
+        title: "Login failed",
+        description: "Incorrect username or password"
+      })
+    } 
 
-      router.replace(`/verify/${username}`);
-
-      setIsSubmitting(false);
-    } catch (error) {
-      console.error('Error during sign-up:', error);
-
-      const axiosError = error as AxiosError<ApiResponse>;
-
-      // Default error message
-      let errorMessage = axiosError.response?.data.message;
-      ('There was a problem with your sign-up. Please try again.');
-
-      toast({
-        title: 'Sign Up Failed',
-        description: errorMessage,
-        variant: 'destructive',
-      });
-
-      setIsSubmitting(false);
+    if(result?.url) {
+      router.replace('/dashboard')
     }
   };
 
@@ -108,37 +68,9 @@ export default function SignUpForm() {
         </div>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            
             <FormField
-              name="username"
-              control={form.control}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <Input
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      debounced(e.target.value);
-                    }}
-                  />
-                  {isCheckingUsername && <Loader2 className="animate-spin" />}
-                  {!isCheckingUsername && usernameMessage && (
-                    <p
-                      className={`text-sm ${
-                        usernameMessage === 'Username is unique'
-                          ? 'text-green-500'
-                          : 'text-red-500'
-                      }`}
-                    >
-                      {usernameMessage}
-                    </p>
-                  )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              name="email"
+              name="identifier"
               control={form.control}
               render={({ field }) => (
                 <FormItem>
